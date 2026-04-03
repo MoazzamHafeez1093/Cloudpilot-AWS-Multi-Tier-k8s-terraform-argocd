@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: user-service-pvc
+  labels:
+    app: user-service
+    project: cloudpilot
+spec:
+  accessModes:
+    - ReadWriteOnce        # only one pod can mount this at a time
+  resources:
+    requests:
+      storage: 1Gi         # 1 gigabyte of storage
+  storageClassName: microk8s-hostpath   # microk8s storage class

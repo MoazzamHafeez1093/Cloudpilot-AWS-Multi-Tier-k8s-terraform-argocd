@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-service-config
+  labels:
+    app: product-service
+    project: cloudpilot
+data:
+  PORT: "4002"
+  DB_PATH: "/data/products.db"

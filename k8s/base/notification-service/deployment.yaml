@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  labels:
+    app: notification-service
+    project: cloudpilot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: notification-service
+        project: cloudpilot
+    spec:
+      containers:
+        - name: notification-service
+          image: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service:latest
+          ports:
+            - containerPort: 4003
+          envFrom:
+            - configMapRef:
+                name: notification-service-config
+          env:
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secret
+                  key: SMTP_USER
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secret
+                  key: SMTP_PASS
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4003
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: notification-data
+              mountPath: /data
+      volumes:
+        - name: notification-data
+          persistentVolumeClaim:
+            claimName: notification-service-pvc
+      restartPolicy: Always

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  labels:
+    app: api-gateway
+    project: cloudpilot
+spec:
+  replicas: 1                    # run 1 copy of this pod
+  selector:
+    matchLabels:
+      app: api-gateway           # this deployment manages pods with this label
+  strategy:
+    type: RollingUpdate          # update without downtime
+    rollingUpdate:
+      maxSurge: 1                # spin up 1 extra pod during update
+      maxUnavailable: 0          # never kill old pod before new one is ready
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        project: cloudpilot
+    spec:
+      containers:
+        - name: api-gateway
+          image: ghcr.io/moazzamhafeez1093/cloudpilot-api-gateway:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: api-gateway-config    # inject all configmap values as env vars
+          resources:
+            requests:
+              memory: "128Mi"    # minimum memory guaranteed
+              cpu: "100m"        # 100 millicores = 0.1 CPU
+            limits:
+              memory: "256Mi"    # hard cap — OOM killed if exceeded
+              cpu: "250m"        # hard cap
+          livenessProbe:         # if this fails → restart the container
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:        # if this fails → stop sending traffic to this pod
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always

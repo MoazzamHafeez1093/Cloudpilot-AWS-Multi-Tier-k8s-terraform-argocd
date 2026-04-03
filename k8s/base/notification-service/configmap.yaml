@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-service-config
+  labels:
+    app: notification-service
+    project: cloudpilot
+data:
+  PORT: "4003"
+  DB_PATH: "/data/notifications.db"
+  SMTP_HOST: "smtp.ethereal.email"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "false"
+  FROM_EMAIL: "noreply@cloudpilot.local"

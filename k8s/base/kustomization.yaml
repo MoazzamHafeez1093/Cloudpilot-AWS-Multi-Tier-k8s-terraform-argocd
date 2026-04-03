@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: cloudpilot-base
+
+resources:
+  # PersistentVolumeClaims
+  - user-service/pvc.yaml
+  - product-service/pvc.yaml
+  - notification-service/pvc.yaml
+
+  # ConfigMaps
+  - api-gateway/configmap.yaml
+  - user-service/configmap.yaml
+  - product-service/configmap.yaml
+  - notification-service/configmap.yaml
+
+  # Secrets
+  - user-service/secret.yaml
+  - notification-service/secret.yaml
+
+  # Deployments
+  - api-gateway/deployment.yaml
+  - user-service/deployment.yaml
+  - product-service/deployment.yaml
+  - notification-service/deployment.yaml
+
+  # Services
+  - api-gateway/service.yaml
+  - user-service/service.yaml
+  - product-service/service.yaml
+  - notification-service/service.yaml
+
+  # Ingress
+  - ingress/ingress.yaml
+
+commonLabels:
+  project: cloudpilot
+  managed-by: kustomize
