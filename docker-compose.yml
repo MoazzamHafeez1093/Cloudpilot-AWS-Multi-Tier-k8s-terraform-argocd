@@ -1,0 +1,97 @@
+
+networks:
+  cloudpilot:
+    driver: bridge
+
+volumes:
+  user_data:
+  product_data:
+  notification_data:
+
+services:
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      target: runner
+    container_name: cloudpilot-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      USER_SERVICE_URL: http://user-service:4001
+      PRODUCT_SERVICE_URL: http://product-service:4002
+      NOTIFY_SERVICE_URL: http://notification-service:4003
+      ALLOWED_ORIGINS: "http://localhost:8080"
+    depends_on:
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    networks: [cloudpilot]
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ./services/user-service
+      target: runner
+    container_name: cloudpilot-users
+    environment:
+      PORT: 4001
+      DB_PATH: /data/users.db
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-in-prod}
+    volumes:
+      - user_data:/data
+    networks: [cloudpilot]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  product-service:
+    build:
+      context: ./services/product-service
+      target: runner
+    container_name: cloudpilot-products
+    environment:
+      PORT: 4002
+      DB_PATH: /data/products.db
+    volumes:
+      - product_data:/data
+    networks: [cloudpilot]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      target: runner
+    container_name: cloudpilot-notifications
+    environment:
+      PORT: 4003
+      DB_PATH: /data/notifications.db
+      SMTP_HOST: ${SMTP_HOST:-smtp.ethereal.email}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@cloudpilot.local}
+    volumes:
+      - notification_data:/data
+    networks: [cloudpilot]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
