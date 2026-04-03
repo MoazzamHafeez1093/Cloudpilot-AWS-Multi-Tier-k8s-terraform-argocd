@@ -1,0 +1,45 @@
+name: Destroy — Tear Down AWS Infrastructure
+
+on:
+  workflow_dispatch:           # ONLY runs when manually triggered
+    inputs:
+      confirm:
+        description: 'Type DESTROY to confirm teardown'
+        required: true
+        type: string
+
+jobs:
+
+  destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'DESTROY' }}
+    # Only proceeds if you typed exactly DESTROY — safety guard
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: infra/terraform
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: infra/terraform
+        run: terraform destroy -auto-approve
+
+      - name: Confirm destruction
+        run: echo "AWS infrastructure destroyed. Billing stopped."

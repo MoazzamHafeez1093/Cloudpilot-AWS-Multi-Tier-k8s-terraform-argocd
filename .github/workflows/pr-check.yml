@@ -1,0 +1,53 @@
+name: PR Check — Validate Manifests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  validate-k8s:
+    name: Validate Kubernetes YAML
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin/
+
+      - name: Validate all K8s manifests
+        run: |
+          find k8s/base -name "*.yaml" | xargs kubeval --ignore-missing-schemas
+
+      - name: Install kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Validate kustomize builds
+        run: |
+          kustomize build k8s/overlays/prod > /dev/null && echo "prod overlay OK"
+          kustomize build k8s/overlays/dev  > /dev/null && echo "dev overlay OK"
+
+  validate-docker:
+    name: Validate Dockerfiles
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfiles with hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
+          ignore: DL3018,DL3008
+          # DL3018: pin apk versions — we skip this for simplicity
+          # DL3008: pin apt versions — same
