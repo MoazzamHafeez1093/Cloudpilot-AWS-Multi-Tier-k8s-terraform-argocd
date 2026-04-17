@@ -5,7 +5,7 @@ metadata:
   name: cloudpilot-prod
 
 resources:
-  - ../../base
+- ../../base
 
 namePrefix: prod-
 
@@ -13,23 +13,27 @@ commonLabels:
   environment: production
 
 images:
-  - name: ghcr.io/moazzamhafeez1093/cloudpilot-api-gateway
-    newTag: latest
-  - name: ghcr.io/moazzamhafeez1093/cloudpilot-user-service
-    newTag: latest
-  - name: ghcr.io/moazzamhafeez1093/cloudpilot-product-service
-    newTag: latest
-  - name: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service
-    newTag: latest
+- name: ghcr.io/moazzamhafeez1093/cloudpilot-api-gateway
+  newName: ghcr.io/moazzamhafeez1093/cloudpilot-api-gateway
+  newTag: 3612bdd
+- name: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service
+  newName: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service
+  newTag: 3612bdd
+- name: ghcr.io/moazzamhafeez1093/cloudpilot-product-service
+  newName: ghcr.io/moazzamhafeez1093/cloudpilot-product-service
+  newTag: 3612bdd
+- name: ghcr.io/moazzamhafeez1093/cloudpilot-user-service
+  newName: ghcr.io/moazzamhafeez1093/cloudpilot-user-service
+  newTag: 3612bdd
 
 patches:
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: api-gateway
-      spec:
-        replicas: 2
-    target:
-      kind: Deployment
+- patch: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
       name: api-gateway
+    spec:
+      replicas: 2
+  target:
+    kind: Deployment
+    name: api-gateway
