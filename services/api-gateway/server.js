@@ -52,3 +52,4 @@ app.get('/health', (req, res) => {
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
 app.listen(PORT, () => console.log(`[api-gateway] listening on :${PORT}`));
+// ci trigger
