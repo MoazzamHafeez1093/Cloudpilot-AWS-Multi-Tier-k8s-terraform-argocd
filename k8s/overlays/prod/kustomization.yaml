@@ -15,16 +15,16 @@ commonLabels:
 images:
 - name: ghcr.io/moazzamhafeez1093/cloudpilot-api-gateway
   newName: ghcr.io/moazzamhafeez1093/cloudpilot-api-gateway
-  newTag: 7d40854
+  newTag: 3d18962
 - name: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service
   newName: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service
-  newTag: 7d40854
+  newTag: 3d18962
 - name: ghcr.io/moazzamhafeez1093/cloudpilot-product-service
   newName: ghcr.io/moazzamhafeez1093/cloudpilot-product-service
-  newTag: 7d40854
+  newTag: 3d18962
 - name: ghcr.io/moazzamhafeez1093/cloudpilot-user-service
   newName: ghcr.io/moazzamhafeez1093/cloudpilot-user-service
-  newTag: 7d40854
+  newTag: 3d18962
 
 patches:
 - patch: |-
