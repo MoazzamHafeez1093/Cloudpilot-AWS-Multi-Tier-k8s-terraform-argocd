@@ -21,6 +21,8 @@ spec:
         app: user-service
         project: cloudpilot
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: user-service
           image: ghcr.io/moazzamhafeez1093/cloudpilot-user-service:latest
@@ -58,7 +60,7 @@ spec:
             failureThreshold: 3
           volumeMounts:
             - name: user-data
-              mountPath: /data     # mount the PVC at /data inside the container
+              mountPath: /data
       volumes:
         - name: user-data
           persistentVolumeClaim:

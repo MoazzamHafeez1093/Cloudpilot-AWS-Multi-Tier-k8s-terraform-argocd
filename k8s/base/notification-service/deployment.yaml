@@ -21,6 +21,8 @@ spec:
         app: notification-service
         project: cloudpilot
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: notification-service
           image: ghcr.io/moazzamhafeez1093/cloudpilot-notification-service:latest

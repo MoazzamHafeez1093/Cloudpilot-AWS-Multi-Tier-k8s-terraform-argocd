@@ -21,6 +21,8 @@ spec:
         app: product-service
         project: cloudpilot
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: product-service
           image: ghcr.io/moazzamhafeez1093/cloudpilot-product-service:latest
