@@ -1,0 +1,26 @@
+---
+- name: CloudPilot — Full Server Bootstrap
+  hosts: cloudpilot
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: common
+      tags: [common]
+
+    - role: hardening
+      tags: [hardening]
+
+    - role: microk8s
+      tags: [microk8s]
+
+    - role: argocd
+      tags: [argocd]
+
+  post_tasks:
+    - name: Print deployment summary
+      debug:
+        msg:
+          - "Bootstrap complete!"
+          - "App URL:    http://{{ ansible_host }}:30000"
+          - "ArgoCD URL: http://{{ ansible_host }}:8080"

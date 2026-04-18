@@ -1,0 +1,60 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install required packages
+  apt:
+    name:
+      - curl
+      - wget
+      - git
+      - unzip
+      - vim
+      - htop
+      - python3
+      - python3-pip
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - software-properties-common
+    state: present
+
+- name: Set timezone to UTC
+  timezone:
+    name: UTC
+
+- name: Check if swap exists
+  stat:
+    path: /swapfile
+  register: swap_file
+
+- name: Create swap file
+  command: fallocate -l 2G /swapfile
+  when: not swap_file.stat.exists
+
+- name: Set swap permissions
+  file:
+    path: /swapfile
+    mode: '0600'
+  when: not swap_file.stat.exists
+
+- name: Make swap
+  command: mkswap /swapfile
+  when: not swap_file.stat.exists
+
+- name: Enable swap
+  command: swapon /swapfile
+  when: not swap_file.stat.exists
+
+- name: Add swap to fstab
+  lineinfile:
+    path: /etc/fstab
+    line: '/swapfile none swap sw 0 0'
+    state: present
+
+- name: Print common role complete
+  debug:
+    msg: "Common packages installed successfully"

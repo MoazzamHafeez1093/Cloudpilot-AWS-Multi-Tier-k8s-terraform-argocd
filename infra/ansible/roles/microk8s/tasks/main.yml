@@ -1,0 +1,65 @@
+---
+- name: Install snapd
+  apt:
+    name: snapd
+    state: present
+
+- name: Install microk8s via snap
+  snap:
+    name: microk8s
+    classic: yes
+    channel: 1.28/stable
+
+- name: Add ubuntu user to microk8s group
+  user:
+    name: ubuntu
+    groups: microk8s
+    append: yes
+
+- name: Create .kube directory for ubuntu user
+  file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Wait for microk8s to be ready
+  command: microk8s status --wait-ready
+  timeout: 180
+  changed_when: false
+
+- name: Enable microk8s addons
+  command: microk8s enable {{ item }}
+  loop:
+    - dns
+    - storage
+    - ingress
+    - registry
+  changed_when: false
+
+- name: Wait for addons to be ready
+  command: microk8s status --wait-ready
+  timeout: 120
+  changed_when: false
+
+- name: Generate kubeconfig for ubuntu user
+  shell: microk8s config > /home/ubuntu/.kube/config
+  changed_when: false
+
+- name: Set kubeconfig permissions
+  file:
+    path: /home/ubuntu/.kube/config
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+
+- name: Create kubectl alias
+  lineinfile:
+    path: /home/ubuntu/.bashrc
+    line: 'alias kubectl="microk8s kubectl"'
+    state: present
+
+- name: Print microk8s complete
+  debug:
+    msg: "microk8s installed and configured successfully"
