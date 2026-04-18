@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudpilot
+  namespace: argocd              # ArgoCD itself runs in the argocd namespace
+  labels:
+    project: cloudpilot
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    # when you delete this Application, ArgoCD also deletes
+    # all the K8s resources it deployed — clean teardown
+
+spec:
+  project: cloudpilot            # references the AppProject below
+
+  source:
+    repoURL: https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd.git
+    targetRevision: HEAD         # always track the latest commit on default branch
+    path: k8s/overlays/prod      # which folder to watch — our prod kustomize overlay
+
+  destination:
+    server: https://kubernetes.default.svc   # deploy to the same cluster ArgoCD runs in
+    namespace: default           # deploy resources into the default namespace
+
+  syncPolicy:
+    automated:
+      prune: true                # delete K8s resources that are removed from git
+      selfHeal: true             # if someone manually changes K8s, revert it to match git
+    syncOptions:
+      - CreateNamespace=true     # create namespace if it doesn't exist
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true           # delete old resources after new ones are healthy
+    retry:
+      limit: 5                   # retry failed syncs up to 5 times
+      backoff:
+        duration: 5s
+        factor: 2                # wait 5s, then 10s, then 20s... between retries
+        maxDuration: 3m
+
+  # Health check settings
+  revisionHistoryLimit: 3        # keep last 3 deployed versions for rollback

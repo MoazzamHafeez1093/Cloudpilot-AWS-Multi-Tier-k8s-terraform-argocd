@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  labels:
+    project: cloudpilot
+data:
+  # Trigger definitions — when to notify
+  trigger.on-deployed: |
+    - description: Application is synced and healthy
+      send: [app-deployed]
+      when: app.status.operationState.phase in ['Succeeded'] and app.health.status == 'Healthy'
+
+  trigger.on-health-degraded: |
+    - description: Application health is degraded
+      send: [app-health-degraded]
+      when: app.health.status == 'Degraded'
+
+  trigger.on-sync-failed: |
+    - description: Application sync failed
+      send: [app-sync-failed]
+      when: app.status.operationState.phase in ['Error', 'Failed']
+
+  # Message templates
+  template.app-deployed: |
+    message: |
+      CloudPilot deployed successfully
+      App: {{.app.metadata.name}}
+      Revision: {{.app.status.sync.revision}}
+      Status: {{.app.health.status}}
+
+  template.app-health-degraded: |
+    message: |
+      CloudPilot health degraded
+      App: {{.app.metadata.name}}
+      Health: {{.app.health.status}}
+      Message: {{.app.status.conditions[0].message}}
+
+  template.app-sync-failed: |
+    message: |
+      CloudPilot sync FAILED
+      App: {{.app.metadata.name}}
+      Error: {{.app.status.operationState.message}}
+
+  # Default triggers for our app
+  defaultTriggers: |
+    - on-deployed
+    - on-health-degraded
+    - on-sync-failed

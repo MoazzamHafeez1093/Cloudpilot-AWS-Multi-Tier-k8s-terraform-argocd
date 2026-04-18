@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: cloudpilot
+  namespace: argocd
+  labels:
+    project: cloudpilot
+
+spec:
+  description: CloudPilot — multi-tier microservices on AWS
+
+  # Only allow syncing from our specific repo
+  sourceRepos:
+    - https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd.git
+
+  # Only allow deploying to the local cluster and default namespace
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: default
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+
+  # What Kubernetes resources this project is allowed to create
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: ''
+      kind: PersistentVolume
+
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'                  # allow all resource types in allowed namespaces
+
+  # Roles within this project
+  roles:
+    - name: read-only
+      description: Read only access for demo viewers
+      policies:
+        - p, proj:cloudpilot:read-only, applications, get, cloudpilot/*, allow
+    - name: deployer
+      description: Full access for CI/CD
+      policies:
+        - p, proj:cloudpilot:deployer, applications, *, cloudpilot/*, allow
