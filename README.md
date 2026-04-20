@@ -1,185 +1,187 @@
 <div align="center">
 
-# 🚀 CloudPilot
+<img src="docs/architecture.png" alt="CloudPilot Architecture" width="100%"/>
 
-### Production-Grade Microservices on AWS — Built From Scratch
+# ☁️ CloudPilot
 
-*A complete DevOps portfolio project demonstrating end-to-end cloud infrastructure,*
-*containerization, Kubernetes orchestration, and GitOps CI/CD automation.*
+**Production-Grade Multi-Tier Microservices — Deployed on AWS**
 
-[![CI — Build, Push, Update Manifests](https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd/actions/workflows/ci.yml/badge.svg)](https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd/actions/workflows/ci.yml)
-![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonaws)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28-326CE5?logo=kubernetes)
-![Terraform](https://img.shields.io/badge/Terraform-1.14-7B42BC?logo=terraform)
-![ArgoCD](https://img.shields.io/badge/ArgoCD-v3.3-EF7B4D?logo=argo)
-![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?logo=docker)
+*Built from scratch. Every line of infrastructure is code. Every deployment is automatic.*
+
+<br/>
+
+[![CI Pipeline](https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd/actions/workflows/ci.yml/badge.svg)](https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd/actions/workflows/ci.yml)
+![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20VPC%20%7C%20EIP-FF9900?style=flat&logo=amazonaws&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28-326CE5?style=flat&logo=kubernetes&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-1.14-7B42BC?style=flat&logo=terraform&logoColor=white)
+![Ansible](https://img.shields.io/badge/Ansible-Roles-EE0000?style=flat&logo=ansible&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-v3.3-EF7B4D?style=flat&logo=argo&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?style=flat&logo=docker&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat&logo=nodedotjs&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?style=flat&logo=githubactions&logoColor=white)
+
+<br/>
+
+> **Push code → 60 seconds → live on AWS. Automatically. Every time.**
 
 </div>
 
 ---
 
-## 📖 What Is This?
+## 📌 What Is CloudPilot?
 
-CloudPilot is a **fully functional microservices application** deployed on real AWS infrastructure — not a tutorial, not a demo with mock data. Every piece of this project is production-grade: the code runs, the infrastructure is live, the CI/CD pipeline fires on every commit, and ArgoCD automatically deploys changes without any manual intervention.
+CloudPilot is a **complete end-to-end DevOps project** — not a tutorial copy, not a mock deployment. Real application code, real AWS infrastructure, real CI/CD pipeline that fires on every commit.
 
-This project was built to demonstrate the complete DevOps lifecycle — from writing application code to provisioning cloud infrastructure to automating deployments — the way it's actually done in the industry.
+It covers the **entire DevOps lifecycle**:
 
-**If you push a code change, within 60 seconds it's running on AWS. That's what this project proves.**
+```
+Write Code → Containerize → Provision Infrastructure → Configure Server
+     → Orchestrate with Kubernetes → Automate CI → GitOps CD with ArgoCD
+```
+
+Everything is reproducible. Tear down the infra, run two commands, it's back up exactly as before.
 
 ---
 
 ## 🏗️ Architecture
 
+<img src="docs/architecture.png" alt="CloudPilot AWS Architecture Diagram" width="100%"/>
+
+<br/>
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Internet                              │
-└─────────────────────┬───────────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────────┐
-│              AWS EC2  (eu-north-1 / t3.medium)               │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │           microk8s Kubernetes Cluster                │    │
-│  │                                                      │    │
-│  │   ┌──────────────────┐  :30000 (public NodePort)    │    │
-│  │   │   API Gateway    │◄──── all external traffic    │    │
-│  │   └────────┬─────────┘                              │    │
-│  │            │ proxies to                              │    │
-│  │   ┌────────▼──────────────────────────────────┐     │    │
-│  │   │          Internal ClusterIP Services       │     │    │
-│  │   │                                            │     │    │
-│  │   │  ┌──────────────┐  ┌──────────────────┐   │     │    │
-│  │   │  │ user-service │  │ product-service  │   │     │    │
-│  │   │  │    :4001     │  │     :4002        │   │     │    │
-│  │   │  │  SQLite DB   │  │   SQLite DB      │   │     │    │
-│  │   │  └──────────────┘  └──────────────────┘   │     │    │
-│  │   │                                            │     │    │
-│  │   │  ┌─────────────────────┐                  │     │    │
-│  │   │  │ notification-service│                  │     │    │
-│  │   │  │       :4003         │                  │     │    │
-│  │   │  │  Async email queue  │                  │     │    │
-│  │   │  └─────────────────────┘                  │     │    │
-│  │   └────────────────────────────────────────────┘    │    │
-│  │                                                      │    │
-│  │   ┌──────────────────┐  :32080 (ArgoCD UI)          │    │
-│  │   │      ArgoCD      │◄──── GitOps engine           │    │
-│  │   └──────────────────┘                              │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                              │
-│  Networking: VPC → Public Subnet → IGW → Route Table        │
-│  Security:   SG (ports 22, 80, 443, 8080, 30000-32767)      │
-│  Storage:    gp3 EBS (20GB encrypted) + PVCs per service     │
-└─────────────────────────────────────────────────────────────┘
+Internet
+    │  HTTP :30000
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  AWS EC2  t3.medium  —  eu-north-1  —  Ubuntu 22.04             │
+│  Elastic IP: 13.51.149.67                                        │
+│                                                                  │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  microk8s Kubernetes Cluster                               │  │
+│  │                                                           │  │
+│  │  ┌─────────────────────────────────┐  :30000 NodePort     │  │
+│  │  │         API Gateway             │◄── all traffic       │  │
+│  │  └──────────────┬──────────────────┘                      │  │
+│  │                 │ ClusterIP (internal only)                │  │
+│  │    ┌────────────┼────────────┐                            │  │
+│  │    ▼            ▼            ▼                            │  │
+│  │  user        product    notification                      │  │
+│  │  :4001        :4002        :4003                          │  │
+│  │  SQLite       SQLite       SQLite + async queue           │  │
+│  │  PVC          PVC          PVC                            │  │
+│  │                                                           │  │
+│  │  ArgoCD  :32080  ←  GitOps engine                         │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  VPC 10.0.0.0/16  →  Subnet 10.0.1.0/24  →  IGW  →  Route Table│
+│  Security Group: ports 22, 80, 443, 8080, 30000-32767           │
+│  Storage: gp3 EBS 20GB encrypted  +  PVCs per service           │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 🔄 CI/CD Pipeline
 
-Every push to `main` triggers this fully automated flow:
+<img src="docs/cicd-pipeline.png" alt="CloudPilot CI/CD Pipeline" width="100%"/>
 
-```
-Developer pushes code
-        │
-        ▼
-┌───────────────────────────────────────────────────────────┐
-│                    GitHub Actions                          │
-│                                                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐  │
-│  │ Build        │  │ Build        │  │ Build          │  │
-│  │ api-gateway  │  │ user-service │  │ product-service│  │
-│  │ image        │  │ image        │  │ image          │  │
-│  └──────┬───────┘  └──────┬───────┘  └───────┬────────┘  │
-│         │    (parallel)   │                   │           │
-│         └────────────────►├◄──────────────────┘           │
-│                           │                               │
-│                    ┌──────▼────────┐                      │
-│                    │ Push all 4    │                      │
-│                    │ images to     │                      │
-│                    │ ghcr.io with  │                      │
-│                    │ git SHA tag   │                      │
-│                    └──────┬────────┘                      │
-│                           │                               │
-│                    ┌──────▼────────┐                      │
-│                    │ Update image  │                      │
-│                    │ tags in       │                      │
-│                    │ kustomization │                      │
-│                    │ .yaml + commit│                      │
-│                    └──────┬────────┘                      │
-└───────────────────────────┼───────────────────────────────┘
-                            │
-                            ▼
-              ┌─────────────────────────┐
-              │  ArgoCD detects change  │
-              │  in k8s/overlays/prod/  │
-              └────────────┬────────────┘
-                           │
-                           ▼
-              ┌─────────────────────────┐
-              │  Rolling deployment     │
-              │  Zero downtime          │
-              │  Self-healing enabled   │
-              └─────────────────────────┘
-```
+<br/>
 
-**Total time from push to live: ~60 seconds.**
+| Stage | Tool | What happens |
+|-------|------|-------------|
+| **Trigger** | GitHub | Push to `main` on `services/**` or `k8s/**` |
+| **Build** | GitHub Actions | 4 Docker images built in parallel (matrix strategy) |
+| **Push** | ghcr.io | Images tagged with git SHA and pushed to registry |
+| **Update** | Kustomize | Image tags updated in `k8s/overlays/prod/` and committed |
+| **Detect** | ArgoCD | Polls repo every 3 minutes, detects new commit |
+| **Deploy** | Kubernetes | Rolling update — maxSurge: 1, maxUnavailable: 0 |
+
+**Total time: ~60 seconds from push to live.**
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Category | Technology | Why |
-|----------|-----------|-----|
-| **Cloud** | AWS EC2, VPC, EIP, SG | Industry standard, real infrastructure |
-| **IaC** | Terraform 1.14 | Declarative, reproducible infrastructure |
-| **Config Mgmt** | Ansible | Idempotent server configuration |
-| **Containers** | Docker (multi-stage) | Lean images, non-root user, HEALTHCHECK |
-| **Orchestration** | Kubernetes (microk8s 1.28) | Self-healing, rolling updates, scaling |
-| **GitOps CD** | ArgoCD v3.3 | Repo is the single source of truth |
-| **CI** | GitHub Actions | Matrix builds, layer caching, free |
-| **Registry** | GitHub Container Registry | Free, integrated with repo |
-| **Runtime** | Node.js + Express | Fast, lightweight, familiar |
-| **Database** | SQLite per service | No external DB needed, persistent volumes |
-| **Validation** | Zod | Runtime type safety on all inputs |
-| **Auth** | JWT + bcrypt | Stateless auth, 12-round hashing |
+| Layer | Technology | Detail |
+|-------|-----------|--------|
+| ☁️ **Cloud** | AWS EC2, VPC, EIP, SG, IAM | eu-north-1, t3.medium, encrypted EBS |
+| 🏗️ **IaC** | Terraform 1.14 | 9 resources, tagged, state-managed |
+| ⚙️ **Config** | Ansible 4 roles | common, hardening, microk8s, argocd |
+| 🐳 **Containers** | Docker multi-stage | Non-root user, HEALTHCHECK, OCI labels |
+| ☸️ **Orchestration** | microk8s 1.28 | dns, storage, ingress, registry addons |
+| 🔁 **GitOps CD** | ArgoCD v3.3 | Auto-sync, selfHeal, prune enabled |
+| ⚡ **CI** | GitHub Actions | Matrix builds, layer caching |
+| 📦 **Registry** | ghcr.io | Free, repo-scoped, SHA-tagged images |
+| 🟢 **Runtime** | Node.js + Express | 4 independent microservices |
+| 🗄️ **Database** | SQLite per service | PersistentVolumeClaims, no shared DB |
+| ✅ **Validation** | Zod | Runtime type safety on all inputs |
+| 🔐 **Auth** | JWT + bcrypt | Stateless, 12-round hashing |
 
 ---
 
-## 📦 Services
+## 📦 Microservices
 
-### 🔀 API Gateway (port 3000)
-The only public-facing service. All external traffic enters here.
+<details>
+<summary><b>🔀 API Gateway — port 3000 (the only public service)</b></summary>
 
-- Rate limiting: 100 requests per 15 minutes per IP
-- Proxies to all downstream services by path
-- Health check endpoint for Kubernetes liveness probes
-- Uses `http-proxy-middleware v2` (v3 broke pathRewrite — pinned deliberately)
+<br/>
 
-### 👤 User Service (port 4001)
-Handles all authentication and user management.
+Single entry point. Nothing reaches the backend directly.
 
-- `POST /users/register` — bcrypt hashing, Zod validation, duplicate email detection
-- `POST /users/login` — timing-attack resistant comparison, JWT issuance (24h expiry)
-- `GET  /users/me` — JWT-protected, returns current user
-- `GET  /users` — admin-only endpoint
+- Rate limiting: 100 requests / 15 min / IP
+- Security headers via helmet
+- Proxies by path to downstream ClusterIP services
+- `http-proxy-middleware v2` — pinned deliberately (v3 broke pathRewrite)
+- Health check at `/health` for Kubernetes liveness probe
 
-### 📦 Product Service (port 4002)
-Full product catalogue with real-world features.
+</details>
 
-- Paginated listing with search and category filtering
-- Partial updates (PATCH-style PUT)
+<details>
+<summary><b>👤 User Service — port 4001</b></summary>
+
+<br/>
+
+Full authentication system.
+
+- `POST /users/register` — Zod validation, bcrypt 12 rounds, duplicate detection
+- `POST /users/login` — timing-attack resistant, JWT 24h expiry
+- `GET  /users/me` — JWT-protected
+- `GET  /users` — admin-only role check
+- SQLite on PersistentVolumeClaim — data survives pod restarts
+
+</details>
+
+<details>
+<summary><b>📦 Product Service — port 4002</b></summary>
+
+<br/>
+
+Full product catalogue.
+
+- `GET  /products` — pagination, search, category filter
+- `POST /products` — create with validation
+- `PUT  /products/:id` — partial update (PATCH-style)
+- `DELETE /products/:id` — with existence check
 - Parameterized queries throughout — SQL injection proof
 - Pre-seeded categories: Electronics, Books, Clothing, General
 
-### 📬 Notification Service (port 4003)
-Async email dispatch with production-grade reliability.
+</details>
 
-- `202 Accepted` response — never makes callers wait
-- SQLite-backed queue with status tracking: `pending → processing → sent/failed`
-- Automatic retry up to 3 attempts with exponential backoff
-- Manual retry endpoint: `POST /notifications/:id/retry`
-- SMTP via nodemailer (configurable via env vars)
+<details>
+<summary><b>📬 Notification Service — port 4003</b></summary>
+
+<br/>
+
+Async dispatch with production-grade reliability.
+
+- `202 Accepted` immediately — never blocks caller
+- SQLite queue: `pending → processing → sent / failed`
+- Auto-retry up to 3 attempts
+- `POST /notifications/:id/retry` — manual retry endpoint
+- SMTP via nodemailer — configurable via Kubernetes Secret
+
+</details>
 
 ---
 
@@ -189,105 +191,126 @@ Async email dispatch with production-grade reliability.
 Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd/
 │
 ├── 🐳 services/
-│   ├── api-gateway/
-│   │   ├── server.js           # Rate limiting, proxy middleware
-│   │   ├── Dockerfile          # Multi-stage, non-root, HEALTHCHECK
-│   │   └── package.json        # http-proxy-middleware pinned to v2
-│   ├── user-service/
-│   │   ├── server.js           # JWT, bcrypt, SQLite
-│   │   └── Dockerfile
-│   ├── product-service/
-│   │   ├── server.js           # CRUD, pagination, search
-│   │   └── Dockerfile
-│   └── notification-service/
-│       ├── server.js           # Async queue, retry logic
-│       └── Dockerfile
+│   ├── api-gateway/            # Rate limiting, proxy, security headers
+│   ├── user-service/           # JWT auth, bcrypt, SQLite
+│   ├── product-service/        # CRUD, pagination, search
+│   └── notification-service/   # Async email queue, retry logic
+│   └── */Dockerfile            # Multi-stage, non-root, HEALTHCHECK, OCI labels
 │
-├── ☸️  k8s/
+├── ☸️ k8s/
 │   ├── base/
-│   │   ├── api-gateway/        # Deployment, Service, ConfigMap
-│   │   ├── user-service/       # Deployment, Service, ConfigMap, Secret, PVC
-│   │   ├── product-service/    # Deployment, Service, ConfigMap, PVC
-│   │   ├── notification-service/ # Deployment, Service, ConfigMap, Secret, PVC
+│   │   ├── */deployment.yaml   # Resources, liveness/readiness probes, imagePullSecrets
+│   │   ├── */service.yaml      # ClusterIP internal / NodePort for gateway
+│   │   ├── */configmap.yaml    # Non-sensitive env vars
+│   │   ├── */secret.yaml       # JWT secret, SMTP credentials
+│   │   ├── */pvc.yaml          # Persistent storage per data service
 │   │   ├── ingress/            # Nginx ingress routing
-│   │   └── kustomization.yaml  # Ties everything together
+│   │   └── kustomization.yaml  # Ties all resources together
 │   └── overlays/
-│       ├── prod/               # ← ArgoCD watches this
+│       ├── prod/               # ← ArgoCD watches this path
 │       └── dev/
 │
-├── 🏗️  infra/
+├── 🏗️ infra/
 │   ├── terraform/
-│   │   ├── main.tf             # VPC, EC2, SG, EIP, IAM
-│   │   ├── variables.tf        # All configurable inputs
-│   │   ├── outputs.tf          # IP, SSH command, app URLs
-│   │   └── inventory.tpl       # Auto-generates Ansible inventory
+│   │   ├── main.tf             # VPC, EC2, SG, EIP, IAM, auto-inventory
+│   │   ├── variables.tf        # Region, instance type, CIDRs, key paths
+│   │   ├── outputs.tf          # IP, SSH command, app URL, ArgoCD URL
+│   │   └── inventory.tpl       # Auto-generates Ansible hosts.ini
 │   └── ansible/
-│       ├── playbooks/site.yml  # Master playbook
+│       ├── playbooks/site.yml  # Master playbook — runs all 4 roles
 │       └── roles/
-│           ├── common/         # Packages, swap, timezone
-│           ├── hardening/      # fail2ban, sshd config, auto-updates
-│           ├── microk8s/       # K8s install + addons
-│           └── argocd/         # ArgoCD install + app deployment
+│           ├── common/         # apt packages, swap 2GB, timezone
+│           ├── hardening/      # fail2ban, sshd hardening, auto-updates
+│           ├── microk8s/       # snap install, addons: dns storage ingress registry
+│           └── argocd/         # install, NodePort patch, AppProject, Application
 │
 ├── 🔁 argocd/
-│   ├── application.yaml        # App definition — repo, path, sync policy
-│   ├── project.yaml            # AppProject — RBAC scoping
-│   └── notifications.yaml      # Slack/webhook alerts on deploy
+│   ├── application.yaml        # Repo, path, auto-sync, selfHeal, prune
+│   ├── project.yaml            # AppProject RBAC — source repos, destinations
+│   └── notifications.yaml      # Deploy/fail/degrade alerts
 │
-├── ⚙️  .github/workflows/
-│   ├── ci.yml                  # Build → Push → Update manifests
-│   ├── pr-check.yml            # Validate YAML on PRs
-│   └── destroy.yml             # Manual AWS teardown
+├── ⚙️ .github/workflows/
+│   ├── ci.yml                  # Matrix build → push → kustomize update → commit
+│   ├── pr-check.yml            # kubeval + kustomize build on every PR
+│   └── destroy.yml             # Manual teardown with DESTROY confirmation gate
 │
-├── docker-compose.yml          # Full local dev stack
-└── .env.example                # Environment variable template
+├── docker-compose.yml          # Full local dev stack with healthcheck depends_on
+└── .env.example                # All required env vars documented
 ```
+
+---
+
+## 🖥️ Live Proof
+
+### All pods running on AWS
+
+<img src="docs/pods-running.png" alt="All pods running" width="100%"/>
+
+### ArgoCD — Synced and Healthy
+
+<img src="docs/argocd-app-tree.png" alt="ArgoCD resource tree" width="100%"/>
+
+### GitHub Actions — CI Green
+
+<img src="docs/github-actions-green.png" alt="GitHub Actions green" width="100%"/>
+
+### AWS EC2 — Running
+
+<img src="docs/aws-ec2-running.png" alt="AWS EC2 running" width="100%"/>
+
+### Terraform Tags — Infrastructure as Code proof
+
+<img src="docs/terraform-tags.png" alt="Terraform tags on EC2" width="100%"/>
+
+### Ansible — Server configuration proof
+
+<img src="docs/ansible-server-config.png" alt="Ansible configured server" width="100%"/>
 
 ---
 
 ## 🚀 Running Locally
 
 ```bash
-# 1. Clone the repo
+# Clone
 git clone https://github.com/MoazzamHafeez1093/Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd.git
 cd Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd
 
-# 2. Set up environment
+# Configure environment
 cp .env.example .env
-# Edit .env with your values
 
-# 3. Start everything
+# Start all 4 services + gateway
 docker compose up --build
 
-# 4. Test it works
+# Verify
 curl http://localhost:3000/health
 ```
 
-Services will be available at:
-- API Gateway: `http://localhost:3000`
-- All routes go through the gateway — individual services are not exposed
+All traffic goes through the gateway at `:3000`. Individual services are not exposed.
 
 ---
 
 ## ☁️ Deploying to AWS
 
 ### Prerequisites
-- AWS account (free tier works for testing)
-- AWS CLI configured: `aws configure`
-- Terraform >= 1.6 installed
-- Ansible installed (Linux/WSL)
-- SSH key pair in `~/.ssh/cloudpilot-key.pem`
 
-### Step 1 — Provision Infrastructure
+```
+✅ AWS account + CLI configured (aws configure)
+✅ Terraform >= 1.6
+✅ Ansible (Linux or WSL on Windows)
+✅ SSH key at ~/.ssh/cloudpilot-key.pem
+✅ GitHub PAT with write:packages scope
+```
+
+### Step 1 — Provision with Terraform
 
 ```bash
 cd infra/terraform
 terraform init
-terraform plan    # Review what will be created
-terraform apply   # Creates VPC, EC2, SG, EIP — ~90 seconds
+terraform plan
+terraform apply
 ```
 
-Terraform outputs:
+Output after apply:
 ```
 instance_public_ip = "x.x.x.x"
 app_url            = "http://x.x.x.x:30000"
@@ -295,25 +318,22 @@ argocd_url         = "http://x.x.x.x:32080"
 ssh_command        = "ssh -i ~/.ssh/cloudpilot-key.pem ubuntu@x.x.x.x"
 ```
 
-The Ansible inventory is **auto-generated** from Terraform output — no manual IP entry needed.
+Ansible inventory is **auto-generated** from Terraform output. No manual IP entry.
 
-### Step 2 — Configure Server
+### Step 2 — Configure with Ansible
 
 ```bash
 cd infra/ansible
 ansible-playbook playbooks/site.yml -i inventory/hosts.ini
 ```
 
-This single command:
-- Installs all system packages and configures swap
-- Hardens SSH (disables root login, password auth)
-- Installs and configures microk8s with dns, storage, ingress addons
-- Installs ArgoCD and applies the Application manifest
-- ArgoCD immediately begins syncing from the GitHub repo
+One command installs and configures everything:
+- System packages, 2GB swap, UTC timezone
+- SSH hardening, fail2ban, unattended upgrades
+- microk8s with dns, storage, ingress, registry addons
+- ArgoCD — deployed and immediately syncing from GitHub
 
-Takes approximately 5-10 minutes.
-
-### Step 3 — Create Image Pull Secret
+### Step 3 — Image Pull Secret
 
 ```bash
 kubectl create secret docker-registry ghcr-secret \
@@ -323,196 +343,127 @@ kubectl create secret docker-registry ghcr-secret \
   -n default
 ```
 
-### Step 4 — Access the Application
+### Step 4 — Access
 
-| What | URL | Notes |
-|------|-----|-------|
-| API | `http://EC2_IP:30000` | All endpoints |
-| ArgoCD | `http://EC2_IP:32080` | Username: `admin` |
+| Service | URL |
+|---------|-----|
+| API | `http://EC2_IP:30000` |
+| ArgoCD | `http://EC2_IP:32080` — admin / (see below) |
 
-Get ArgoCD admin password:
 ```bash
+# Get ArgoCD password
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d
 ```
 
-### Destroying Infrastructure (Stop Billing)
+### Teardown — Stop Billing
 
-**Option A — GitHub Actions (recommended):**
-Go to repo → Actions → **Destroy — Tear Down AWS Infrastructure** → Run workflow → type `DESTROY`
-
-**Option B — Local:**
 ```bash
 cd infra/terraform
 terraform destroy
 ```
 
+Or from GitHub: Actions → **Destroy — Tear Down AWS Infrastructure** → type `DESTROY`
+
 ---
 
 ## 📡 API Reference
 
-### Health Check
 ```bash
+# Health check
 GET http://EC2_IP:30000/health
+→ {"status":"healthy","service":"api-gateway","uptime":338}
 
-# Response
-{"status":"healthy","service":"api-gateway","version":"1.0.0","uptime":338}
-```
-
-### Register User
-```bash
+# Register
 POST http://EC2_IP:30000/api/users/register
-Content-Type: application/json
+{"name":"John","email":"john@example.com","password":"password123"}
+→ {"message":"User created successfully","user":{...}}
 
-{"name":"John Doe","email":"john@example.com","password":"securepassword"}
-
-# Response
-{"message":"User created successfully","user":{"id":1,"name":"John Doe","email":"john@example.com","role":"user"}}
-```
-
-### Login
-```bash
+# Login
 POST http://EC2_IP:30000/api/users/login
-Content-Type: application/json
+{"email":"john@example.com","password":"password123"}
+→ {"token":"eyJhbGci...","user":{...}}
 
-{"email":"john@example.com","password":"securepassword"}
-
-# Response
-{"token":"eyJhbGci...","user":{"id":1,"name":"John Doe","role":"user"}}
-```
-
-### Create Product
-```bash
+# Create product
 POST http://EC2_IP:30000/api/products
-Content-Type: application/json
-
 {"name":"MacBook Pro","price":2499.99,"category":"electronics","stock":5}
+→ {"message":"Product created","product":{...}}
 
-# Response
-{"message":"Product created","product":{"id":1,"name":"MacBook Pro","price":2499.99}}
-```
-
-### Get Products (with search + pagination)
-```bash
+# List products (with search + pagination)
 GET http://EC2_IP:30000/api/products?category=electronics&page=1&limit=10
+GET http://EC2_IP:30000/api/products?search=macbook
 
-GET http://EC2_IP:30000/api/products?search=laptop
-```
-
-### Send Notification
-```bash
+# Send notification (async)
 POST http://EC2_IP:30000/api/notifications/send
-Content-Type: application/json
-
-{"type":"email","recipient":"user@example.com","subject":"Welcome","body":"CloudPilot works!"}
-
-# Response (immediate — async processing)
-{"message":"Notification queued","id":1}
+{"type":"email","recipient":"user@example.com","subject":"Hi","body":"Welcome!"}
+→ {"message":"Notification queued","id":1}
 ```
 
 ---
 
-## 🔒 Security Highlights
+## 🔒 Security
 
-- **Non-root containers** — every Dockerfile creates a dedicated `appuser` and drops privileges
-- **Multi-stage builds** — no build tools in final images, minimal attack surface
-- **ClusterIP for internal services** — user/product/notification services unreachable from internet
-- **Rate limiting** at gateway — 100 req/15min per IP
-- **Parameterized SQL** — zero string concatenation in any query
-- **JWT with expiry** — 24-hour tokens, stateless verification
-- **bcrypt 12 rounds** — resistant to brute force
-- **Timing-attack resistant login** — always runs bcrypt.compare even when user doesn't exist
-- **SSH hardening** — root login disabled, password auth disabled, fail2ban installed
-- **Encrypted EBS** — root volume encrypted at rest
-- **Secrets management** — JWT secret and SMTP credentials in Kubernetes Secrets, never in ConfigMaps or code
-
----
-
-## ⚠️ Challenges Faced & How They Were Solved
-
-### 1. http-proxy-middleware v3 broke pathRewrite
-**Problem:** After installing the latest version, all proxied requests were arriving at downstream services with incorrect paths (`/register` instead of `/users/register`).
-
-**Root cause:** v3 completely changed the `pathRewrite` API and error handler syntax.
-
-**Fix:** Pinned to `^2.0.6` in `package.json`. Documented the reason in comments.
-
-**Lesson:** Never blindly install the latest version of a library in production code.
+| Area | Implementation |
+|------|---------------|
+| Containers | Non-root user (`appuser`), multi-stage builds, no build tools in final image |
+| Network | Internal services on ClusterIP — unreachable from internet directly |
+| Rate limiting | 100 req / 15 min / IP at gateway |
+| Database | Parameterized queries only — zero string concatenation |
+| Auth | JWT 24h expiry, bcrypt 12 rounds, timing-attack resistant login |
+| Server | Root login disabled, password auth disabled, fail2ban active |
+| Storage | EBS encrypted at rest, Kubernetes Secrets for credentials |
+| CI/CD | Secrets in GitHub Secrets — never in code or ConfigMaps |
 
 ---
 
-### 2. Kubernetes service names prefixed by Kustomize
-**Problem:** After ArgoCD deployed the app, all pods were in `ImagePullBackOff` then when fixed, the gateway couldn't reach services. Error: `504 Gateway Timeout`.
+## ⚠️ Real Challenges Solved
 
-**Root cause:** The Kustomize prod overlay adds `namePrefix: prod-` to all resources. So `user-service` becomes `prod-user-service`. The ConfigMap still pointed to `http://user-service:4001`.
+### 1 — http-proxy-middleware v3 broke everything
+v3 silently changed the `pathRewrite` behavior. Requests arrived at services with wrong paths. Debugged by reading proxy logs, identified version as root cause. **Fix: pinned to `^2.0.6`.**
 
-**Fix:** Updated ConfigMap URLs to use the `prod-` prefix. Now a permanent fix in the manifests.
+### 2 — Kustomize namePrefix broke service discovery
+The prod overlay adds `prod-` prefix to all resource names. The gateway ConfigMap still pointed to `http://user-service:4001`. DNS resolution failed silently — returned 504. **Fix: updated URLs to `http://prod-user-service:4001`.**
 
-**Lesson:** Always verify actual resource names in the cluster match what your app expects.
+### 3 — Private ghcr.io images — ImagePullBackOff
+Kubernetes had no credentials to pull from the private registry. **Fix: created `docker-registry` Secret and added `imagePullSecrets` to all Deployments.**
 
----
+### 4 — npm ci required package-lock.json
+`npm ci` is stricter than `npm install` — requires a lockfile. Docker build failed. **Fix: committed `package-lock.json` for all 4 services.**
 
-### 3. Private ghcr.io images couldn't be pulled by Kubernetes
-**Problem:** All pods stuck in `ImagePullBackOff`. The cluster had no credentials to pull from ghcr.io.
-
-**Root cause:** GitHub Container Registry packages were set to Private by default.
-
-**Fix:** Created a `docker-registry` Secret with GitHub PAT credentials and patched all Deployments to reference it via `imagePullSecrets`.
-
-**Lesson:** Either make images public or pre-create pull secrets before ArgoCD syncs.
+### 5 — Ansible roles not found on Windows filesystem
+WSL treats the Windows mount as world-writable — ignores `ansible.cfg`. Roles path wasn't resolved. **Fix: copied project to WSL home, added `roles_path = ./roles` to cfg.**
 
 ---
 
-### 4. npm ci failing in Docker build — missing package-lock.json
-**Problem:** `npm ci` requires a `package-lock.json` but we only had `package.json` committed.
+## 📊 By The Numbers
 
-**Root cause:** `npm ci` is stricter than `npm install` — it requires a lockfile for reproducible builds.
-
-**Fix:** Ran `npm install` locally first to generate the lockfile, then committed it.
-
-**Lesson:** Always commit `package-lock.json`. It ensures every build produces identical dependency trees.
-
----
-
-### 5. Ansible roles path not found
-**Problem:** `ansible-playbook` couldn't find roles when run from inside the project directory.
-
-**Root cause:** Ansible looks for roles relative to the playbook file location, and the Windows filesystem mount point was treated as "world writable" causing ansible.cfg to be ignored.
-
-**Fix:** Copied the ansible directory to WSL home, added explicit `roles_path = ./roles` to `ansible.cfg`.
-
-**Lesson:** Run Ansible from a Linux-native path, not a Windows mount.
-
----
-
-## 📊 Project Stats
-
-| Metric | Value |
-|--------|-------|
-| Total files | 60+ |
-| Lines of code | ~2,500 |
-| Docker images | 4 |
-| Kubernetes manifests | 21 |
+| What | Count |
+|------|-------|
+| Microservices | 4 |
+| Dockerfiles (multi-stage) | 4 |
+| Kubernetes YAML files | 21 |
 | Terraform resources | 9 |
 | Ansible roles | 4 |
 | GitHub Actions workflows | 3 |
-| AWS resources provisioned | VPC, Subnet, IGW, Route Table, SG, EC2, EIP, IAM Role |
-| Time from push to live | ~60 seconds |
+| AWS resources provisioned | 9 (VPC, Subnet, IGW, RT, SG, EC2, EIP, IAM Role, IAM Profile) |
+| Lines of application code | ~2,500 |
+| Push to live | ~60 seconds |
 
 ---
 
 ## 👤 Author
 
 **Moazzam Hafeez**
-BS Computer Science — FAST NUCES Islamabad (Final Semester)
-Focused on Cloud & DevOps Engineering
+BS Computer Science — FAST NUCES Islamabad
+Cloud & DevOps Engineering
 
-[![GitHub](https://img.shields.io/badge/GitHub-MoazzamHafeez1093-181717?logo=github)](https://github.com/MoazzamHafeez1093)
+[![GitHub](https://img.shields.io/badge/GitHub-MoazzamHafeez1093-181717?style=flat&logo=github)](https://github.com/MoazzamHafeez1093)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat&logo=linkedin)](https://linkedin.com/in/yourlinkedin)
 
 ---
 
 <div align="center">
 
-*Built with persistence, debugged with patience, deployed with pride.*
+*Built with persistence. Debugged with patience. Deployed with pride.*
 
 </div>
