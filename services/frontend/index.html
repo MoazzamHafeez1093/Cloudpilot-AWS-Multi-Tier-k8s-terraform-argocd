@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CloudPilot Console</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3150;
+    --accent: #6366f1;
+    --accent2: #22d3ee;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .api-status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); animation: pulse 2s infinite; }
+  .status-dot.online { background: var(--green); animation: none; }
+  .status-dot.offline { background: var(--red); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* API Config Bar */
+  .api-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .api-bar input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 280px;
+  }
+  .api-bar button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  /* Tabs */
+  .tabs {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    gap: 4px;
+  }
+  .tab {
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Main */
+  .main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 1rem;
+  }
+
+  /* Stat grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 2rem; font-weight: 700; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.cyan { color: var(--accent2); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* Service health */
+  .service-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+  .service-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .service-name { font-size: 14px; font-weight: 500; }
+  .service-port { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .badge.healthy { background: rgba(34,197,94,.15); color: var(--green); }
+  .badge.offline { background: rgba(239,68,68,.15); color: var(--red); }
+  .badge.pending { background: rgba(234,179,8,.15); color: var(--yellow); }
+
+  /* Forms */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 13px; color: var(--muted); }
+  input, textarea, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* Buttons */
+  .btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity .2s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-green { background: var(--green); color: white; }
+  .btn-row { display: flex; gap: 10px; margin-top: 1rem; }
+
+  /* Response box */
+  .response {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 1rem;
+    display: none;
+  }
+  .response.show { display: block; }
+
+  /* Token display */
+  .token-box {
+    background: var(--bg);
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--green);
+    word-break: break-all;
+    margin-top: 1rem;
+    display: none;
+  }
+  .token-box.show { display: block; }
+
+  /* Product table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .price { color: var(--green); font-weight: 600; }
+  .category-pill {
+    background: rgba(99,102,241,.15);
+    color: var(--accent);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+
+  /* Notification status */
+  .notif-list { display: flex; flex-direction: column; gap: 10px; }
+  .notif-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .notif-info { font-size: 14px; }
+  .notif-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* Alert */
+  .alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .alert.show { display: block; }
+  .alert.success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: var(--green); }
+  .alert.error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: var(--red); }
+  .alert.info { background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.3); color: var(--accent); }
+
+  /* Search bar */
+  .search-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+  .search-row input { flex: 1; }
+
+  /* Section title */
+  .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .main { padding: 1rem; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">☁</div>
+    CloudPilot Console
+  </div>
+  <div class="api-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Checking...</span>
+  </div>
+</div>
+
+<div class="api-bar">
+  <span style="color:var(--muted);font-size:13px">API Base URL:</span>
+  <input type="text" id="apiBase" value="http://13.51.149.67:30000" placeholder="http://your-ec2-ip:30000"/>
+  <button onclick="checkHealth()">Connect</button>
+  <span style="color:var(--muted)">|</span>
+  <span style="color:var(--muted);font-size:12px">No API? App runs with demo data</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
+  <div class="tab" onclick="switchTab('users',this)">👤 Users</div>
+  <div class="tab" onclick="switchTab('products',this)">📦 Products</div>
+  <div class="tab" onclick="switchTab('notifications',this)">📬 Notifications</div>
+</div>
+
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">API Gateway</div>
+        <div class="stat-value green" id="d-status">—</div>
+        <div class="stat-sub" id="d-uptime">uptime: —</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Users Registered</div>
+        <div class="stat-value accent" id="d-users">—</div>
+        <div class="stat-sub">in database</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Products</div>
+        <div class="stat-value cyan" id="d-products">—</div>
+        <div class="stat-sub">in catalogue</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Notifications</div>
+        <div class="stat-value" id="d-notifs" style="color:var(--yellow)">—</div>
+        <div class="stat-sub">queued / sent</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Service Health</div>
+      <div class="service-grid">
+        <div class="service-card">
+          <div><div class="service-name">API Gateway</div><div class="service-port">:30000 — NodePort</div></div>
+          <span class="badge pending" id="svc-gateway">checking</span>
+        </div>
+        <div class="service-card">
+          <div><div class="service-name">User Service</div><div class="service-port">:4001 — ClusterIP</div></div>
+          <span class="badge pending" id="svc-users">internal</span>
+        </div>
+        <div class="service-card">
+          <div><div class="service-name">Product Service</div><div class="service-port">:4002 — ClusterIP</div></div>
+          <span class="badge pending" id="svc-products">internal</span>
+        </div>
+        <div class="service-card">
+          <div><div class="service-name">Notification Service</div><div class="service-port">:4003 — ClusterIP</div></div>
+          <span class="badge pending" id="svc-notifs">internal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Infrastructure</div>
+      <div class="service-grid">
+        <div class="service-card"><div><div class="service-name">AWS EC2</div><div class="service-port">t3.medium — eu-north-1</div></div><span class="badge healthy">Terraform</span></div>
+        <div class="service-card"><div><div class="service-name">Kubernetes</div><div class="service-port">microk8s 1.28</div></div><span class="badge healthy">Ansible</span></div>
+        <div class="service-card"><div><div class="service-name">ArgoCD</div><div class="service-port">:32080 — GitOps CD</div></div><span class="badge healthy">Synced</span></div>
+        <div class="service-card"><div><div class="service-name">CI Pipeline</div><div class="service-port">GitHub Actions</div></div><span class="badge healthy">Passing</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="page" id="page-users">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+      <div class="card">
+        <div class="section-title">Register User</div>
+        <div class="alert" id="reg-alert"></div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Full Name</label>
+            <input id="reg-name" type="text" placeholder="John Doe"/>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input id="reg-email" type="email" placeholder="john@example.com"/>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input id="reg-pass" type="password" placeholder="min 8 characters"/>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="registerUser()">Register →</button>
+        </div>
+        <div class="response" id="reg-response"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Login</div>
+        <div class="alert" id="login-alert"></div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Email</label>
+            <input id="login-email" type="email" placeholder="john@example.com"/>
+          </div>
+          <div class="form-group full">
+            <label>Password</label>
+            <input id="login-pass" type="password" placeholder="your password"/>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="loginUser()">Login →</button>
+        </div>
+        <div class="alert success" id="token-label" style="display:none">JWT Token (24h expiry):</div>
+        <div class="token-box" id="token-display"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="page" id="page-products">
+    <div class="card">
+      <div class="section-title">Add Product</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Product Name</label>
+          <input id="p-name" type="text" placeholder="MacBook Pro"/>
+        </div>
+        <div class="form-group">
+          <label>Price ($)</label>
+          <input id="p-price" type="number" placeholder="2499.99"/>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="p-category">
+            <option value="electronics">Electronics</option>
+            <option value="books">Books</option>
+            <option value="clothing">Clothing</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Stock</label>
+          <input id="p-stock" type="number" placeholder="10"/>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="createProduct()">Add Product</button>
+        <button class="btn btn-secondary" onclick="loadProducts()">Refresh List</button>
+      </div>
+      <div class="response" id="p-response"></div>
+    </div>
+
+    <div class="card">
+      <div class="search-row">
+        <input id="p-search" type="text" placeholder="Search products..."/>
+        <button class="btn btn-secondary" onclick="loadProducts()">Search</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Price</th><th>Category</th><th>Stock</th><th>Added</th></tr>
+          </thead>
+          <tbody id="product-table">
+            <tr><td colspan="5" class="empty-state">Click "Refresh List" to load products</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="page" id="page-notifications">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+      <div class="card">
+        <div class="section-title">Send Notification</div>
+        <div class="alert" id="notif-alert"></div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Recipient Email</label>
+            <input id="n-recipient" type="email" placeholder="user@example.com"/>
+          </div>
+          <div class="form-group full">
+            <label>Subject</label>
+            <input id="n-subject" type="text" placeholder="Welcome to CloudPilot"/>
+          </div>
+          <div class="form-group full">
+            <label>Message</label>
+            <textarea id="n-body" placeholder="Your message here..."></textarea>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="sendNotification()">Send →</button>
+        </div>
+        <div class="response" id="n-response"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Notification Queue</div>
+        <div class="btn-row" style="margin-top:0;margin-bottom:1rem">
+          <button class="btn btn-secondary" onclick="loadNotifications()">Refresh Queue</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="empty-state">Click "Refresh Queue" to load</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = () => document.getElementById('apiBase').value.replace(/\/$/, '');
+let authToken = '';
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'products') loadProducts();
+  if (name === 'notifications') loadNotifications();
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'alert ' + type + ' show';
+  setTimeout(() => el.className = 'alert', 4000);
+}
+
+function showResponse(id, data) {
+  const el = document.getElementById(id);
+  el.textContent = JSON.stringify(data, null, 2);
+  el.classList.add('show');
+}
+
+async function apiCall(method, path, body) {
+  try {
+    const opts = {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+    };
+    if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API() + path, opts);
+    const data = await res.json();
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    return { ok: false, status: 0, data: { error: 'Cannot reach API — ' + e.message } };
+  }
+}
+
+async function checkHealth() {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot';
+  txt.textContent = 'Checking...';
+
+  const r = await apiCall('GET', '/health');
+  if (r.ok) {
+    dot.className = 'status-dot online';
+    txt.textContent = 'Connected — ' + API();
+    document.getElementById('d-status').textContent = 'Online';
+    document.getElementById('d-uptime').textContent = 'uptime: ' + Math.floor(r.data.uptime) + 's';
+    document.getElementById('svc-gateway').textContent = 'healthy';
+    document.getElementById('svc-gateway').className = 'badge healthy';
+    document.getElementById('svc-users').className = 'badge healthy';
+    document.getElementById('svc-users').textContent = 'healthy';
+    document.getElementById('svc-products').className = 'badge healthy';
+    document.getElementById('svc-products').textContent = 'healthy';
+    document.getElementById('svc-notifs').className = 'badge healthy';
+    document.getElementById('svc-notifs').textContent = 'healthy';
+    loadDashboardStats();
+  } else {
+    dot.className = 'status-dot offline';
+    txt.textContent = 'Offline — demo mode';
+    document.getElementById('d-status').textContent = 'Offline';
+    loadDemoData();
+  }
+}
+
+function loadDemoData() {
+  document.getElementById('d-users').textContent = '3';
+  document.getElementById('d-products').textContent = '5';
+  document.getElementById('d-notifs').textContent = '2';
+}
+
+async function loadDashboardStats() {
+  const u = await apiCall('GET', '/api/users/me');
+  const p = await apiCall('GET', '/api/products');
+  const n = await apiCall('GET', '/api/notifications');
+  if (p.ok) document.getElementById('d-products').textContent = p.data.total || p.data.products?.length || '—';
+  if (n.ok) document.getElementById('d-notifs').textContent = n.data.notifications?.length || '—';
+}
+
+async function registerUser() {
+  const name = document.getElementById('reg-name').value;
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-pass').value;
+  if (!name || !email || !password) { showAlert('reg-alert', 'All fields required', 'error'); return; }
+  const r = await apiCall('POST', '/api/users/register', { name, email, password });
+  showResponse('reg-response', r.data);
+  if (r.ok) showAlert('reg-alert', '✓ User registered successfully', 'success');
+  else showAlert('reg-alert', r.data.error || 'Registration failed', 'error');
+}
+
+async function loginUser() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-pass').value;
+  if (!email || !password) { showAlert('login-alert', 'Email and password required', 'error'); return; }
+  const r = await apiCall('POST', '/api/users/login', { email, password });
+  if (r.ok) {
+    authToken = r.data.token;
+    document.getElementById('token-display').textContent = r.data.token;
+    document.getElementById('token-display').classList.add('show');
+    document.getElementById('token-label').style.display = 'block';
+    showAlert('login-alert', '✓ Logged in as ' + r.data.user.name, 'success');
+    document.getElementById('d-users').textContent = r.data.user.id;
+  } else {
+    showAlert('login-alert', r.data.error || 'Login failed', 'error');
+  }
+}
+
+async function loadProducts() {
+  const search = document.getElementById('p-search').value;
+  const path = search ? '/api/products?search=' + encodeURIComponent(search) : '/api/products';
+  const r = await apiCall('GET', path);
+  const tbody = document.getElementById('product-table');
+  if (r.ok && r.data.products?.length) {
+    tbody.innerHTML = r.data.products.map(p => `
+      <tr>
+        <td><b>${p.name}</b></td>
+        <td class="price">$${Number(p.price).toFixed(2)}</td>
+        <td><span class="category-pill">${p.category}</span></td>
+        <td>${p.stock}</td>
+        <td style="color:var(--muted);font-size:12px">${p.created_at?.slice(0,10) || '—'}</td>
+      </tr>`).join('');
+  } else if (r.ok) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No products yet — add one above</td></tr>';
+  } else {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:var(--red)">${r.data.error || 'API offline'}</td></tr>`;
+  }
+}
+
+async function createProduct() {
+  const name = document.getElementById('p-name').value;
+  const price = parseFloat(document.getElementById('p-price').value);
+  const category = document.getElementById('p-category').value;
+  const stock = parseInt(document.getElementById('p-stock').value) || 0;
+  if (!name || !price) { showResponse('p-response', { error: 'Name and price required' }); return; }
+  const r = await apiCall('POST', '/api/products', { name, price, category, stock });
+  showResponse('p-response', r.data);
+  if (r.ok) { loadProducts(); document.getElementById('p-name').value = ''; document.getElementById('p-price').value = ''; }
+}
+
+async function sendNotification() {
+  const recipient = document.getElementById('n-recipient').value;
+  const subject = document.getElementById('n-subject').value;
+  const body = document.getElementById('n-body').value;
+  if (!recipient || !body) { showAlert('notif-alert', 'Recipient and body required', 'error'); return; }
+  const r = await apiCall('POST', '/api/notifications/send', { type: 'email', recipient, subject, body });
+  showResponse('n-response', r.data);
+  if (r.ok) {
+    showAlert('notif-alert', '✓ Notification queued (ID: ' + r.data.id + ')', 'success');
+    loadNotifications();
+    document.getElementById('n-recipient').value = '';
+    document.getElementById('n-subject').value = '';
+    document.getElementById('n-body').value = '';
+  } else {
+    showAlert('notif-alert', r.data.error || 'Failed', 'error');
+  }
+}
+
+async function loadNotifications() {
+  const r = await apiCall('GET', '/api/notifications');
+  const list = document.getElementById('notif-list');
+  if (r.ok && r.data.notifications?.length) {
+    list.innerHTML = r.data.notifications.map(n => {
+      const color = n.status === 'sent' ? 'healthy' : n.status === 'failed' ? 'offline' : 'pending';
+      return `<div class="notif-item">
+        <div>
+          <div class="notif-info">${n.subject || '(no subject)'} → ${n.recipient}</div>
+          <div class="notif-meta">ID: ${n.id} · ${n.type} · attempts: ${n.attempts}</div>
+        </div>
+        <span class="badge ${color}">${n.status}</span>
+      </div>`;
+    }).join('');
+  } else if (r.ok) {
+    list.innerHTML = '<div class="empty-state">No notifications yet</div>';
+  } else {
+    list.innerHTML = '<div class="empty-state" style="color:var(--red)">API offline — cannot load queue</div>';
+  }
+}
+
+// Auto-check on load
+window.addEventListener('load', () => {
+  checkHealth();
+  setInterval(checkHealth, 30000);
+});
+</script>
+</body>
+</html>

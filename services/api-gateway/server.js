@@ -2,9 +2,18 @@ const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// CORS — must be first, before everything else
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors());
 
 app.use(morgan('combined'));
 
@@ -52,4 +61,3 @@ app.get('/health', (req, res) => {
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
 app.listen(PORT, () => console.log(`[api-gateway] listening on :${PORT}`));
-// ci trigger
