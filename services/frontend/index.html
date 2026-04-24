@@ -478,7 +478,6 @@
         <button class="btn btn-secondary btn-sm" onclick="quickTest('health')">GET /health</button>
         <button class="btn btn-secondary btn-sm" onclick="quickTest('products')">GET /products</button>
         <button class="btn btn-secondary btn-sm" onclick="quickTest('notifications')">GET /notifications</button>
-        <button class="btn btn-secondary btn-sm" onclick="quickTest('userhealth')">GET user health</button>
       </div>
       <div class="response" id="quick-response"></div>
     </div>
@@ -715,14 +714,13 @@ function loadDemoData() {
 }
 
 async function loadDashboardStats() {
-  const [p, n, u] = await Promise.all([
+  const [p, n] = await Promise.all([
     apiCall('GET', '/api/products'),
     apiCall('GET', '/api/notifications'),
-    apiCall('GET', '/api/users/health'),
   ]);
   if (p.ok) document.getElementById('d-products').textContent = p.data.total ?? p.data.products?.length ?? '—';
   if (n.ok) document.getElementById('d-notifs').textContent = n.data.notifications?.length ?? '—';
-  if (u.ok) document.getElementById('d-users').textContent = u.data.users_registered ?? '—';
+  // User count — update after login only
 }
 
 async function quickTest(type) {
@@ -730,7 +728,6 @@ async function quickTest(type) {
     health: '/health',
     products: '/api/products',
     notifications: '/api/notifications',
-    userhealth: '/api/users/health',
   };
   const r = await apiCall('GET', paths[type]);
   showResponse('quick-response', r.data, r.ok ? 'success' : 'error');
