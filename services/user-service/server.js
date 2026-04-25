@@ -107,4 +107,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'user-service', users_registered: count, timestamp: new Date().toISOString() });
 });
 
+app.get('/users/health', (req, res) => {
+  const count = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+  res.json({ status: 'healthy', service: 'user-service', users_registered: count, timestamp: new Date().toISOString() });
+});
+
 app.listen(PORT, () => console.log(`[user-service] listening on :${PORT}`));
