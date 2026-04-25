@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="screenshots/cloudpilot_architeechture.png" alt="CloudPilot Architecture" width="100%"/>
+<img src="screenshots/cloudpilot_architechture.png" alt="CloudPilot Architecture" width="100%"/>
 
 <br/>
 
@@ -30,7 +30,43 @@
 
 </div>
 
+
 ---
+
+## 🎬 Project in Action
+
+<div align="center">
+
+### 🖥️ Live Frontend Demo
+
+<a href="https://drive.google.com/file/d/1PgL8YXGur24y-7hsg-K7pGGlp2gBGGXQ/view?usp=sharing" target="_blank">
+  <img src="https://img.shields.io/badge/▶%20Watch%20Frontend%20Demo-FF0000?style=for-the-badge&logo=googledrive&logoColor=white" alt="Watch Frontend Demo" height="50"/>
+</a>
+
+> *Live frontend running on AWS — real traffic, real responses, zero mocks.*
+
+<br/>
+
+### 🚀 Full Project Walkthrough
+
+<a href="https://drive.google.com/file/d/1PixBGrwmp4lnQXfuUp7USbh13MZZMc3t/view?usp=sharing" target="_blank">
+  <img src="https://img.shields.io/badge/▶%20Watch%20Full%20CloudPilot%20Walkthrough-4285F4?style=for-the-badge&logo=googledrive&logoColor=white" alt="Watch Full CloudPilot Walkthrough" height="50"/>
+</a>
+
+> *End-to-end: Terraform → Ansible → Kubernetes → ArgoCD → CI/CD → Live.*
+
+<br/>
+
+| | Video | What You'll See |
+|---|---|---|
+| 🖥️ | [**Frontend Live Demo**](https://drive.google.com/file/d/1PgL8YXGur24y-7hsg-K7pGGlp2gBGGXQ/view?usp=sharing) | Dashboard running live on AWS · API calls in real time · JWT auth flow |
+| 🎥 | [**Full Project Walkthrough**](https://drive.google.com/file/d/1PixBGrwmp4lnQXfuUp7USbh13MZZMc3t/view?usp=sharing) | Infrastructure provisioning · GitOps pipeline · ArgoCD sync · everything live |
+
+</div>
+
+
+---
+
 
 ## 📌 What Is CloudPilot?
 
@@ -298,7 +334,7 @@ Cloudpilot-AWS-Multi-Tier-k8s-terraform-argocd/
 
 <img src="screenshots/aws-ec2-running.png" alt="AWS EC2 running" width="100%"/>
 
-<img src="screenshots/aws-vpc-run.png" alt="AWS VPC" width="100%"/>
+<img src="screenshots/aws-vpc_run.png" alt="AWS VPC" width="100%"/>
 
 ---
 
